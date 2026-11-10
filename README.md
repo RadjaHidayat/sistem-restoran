@@ -5,7 +5,6 @@ Proyek akhir [nama mata kuliah], kelompok [nomor/nama kelompok].
 Anggota:
 - [INDRA OKTA NUGRAHA] ([123250188])
 - [SATTARI RADJASYAH HIDAYAT] ([123250190])
-- [Nama 3] ([NIM])
 
 ## Fitur
 - Login, register pelanggan, logout, dan hak akses per role (admin, kasir, koki, pelanggan)
