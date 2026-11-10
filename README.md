@@ -1,10 +1,10 @@
 # Sistem Layanan Kuliner dan Restoran
 
-Proyek akhir [nama mata kuliah], kelompok [nomor/nama kelompok].
+Proyek akhir Pemrograman Web, kelompok 4.
 
 Anggota:
-- [INDRA OKTA NUGRAHA] ([123250188])
-- [SATTARI RADJASYAH HIDAYAT] ([123250190])
+- INDRA OKTA NUGRAHA (123250188)
+- SATTARI RADJASYAH HIDAYAT (123250190)
 
 ## Fitur
 - Login, register pelanggan, logout, dan hak akses per role (admin, kasir, koki, pelanggan)
