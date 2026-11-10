@@ -1,6 +1,6 @@
 # Sistem Layanan Kuliner dan Restoran
 
-Proyek akhir Pemrograman Web, kelompok 4.
+Proyek akhir Praktikum Pemrograman Web, kelompok 4.
 
 Anggota:
 - INDRA OKTA NUGRAHA (123250188)
