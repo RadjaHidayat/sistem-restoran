@@ -1,6 +1,6 @@
-@extends('layouts.fullscreen-layout')
+@extends('layouts.pelanggan')
 
-@section('content')
+@section('isi')
     @php
         $langkah = [
             'baru' => 'Pesanan diterima',
@@ -16,8 +16,8 @@
         $posisi = array_search($pesanan->status, $urutan);
     @endphp
 
-    <div class="mx-auto min-h-screen max-w-2xl bg-white px-5 py-8 dark:bg-gray-900">
-        <a href="{{ route('akun.index') }}" class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400">&larr; Kembali ke Akun Saya</a>
+    <div class="mx-auto max-w-2xl">
+        <a href="{{ route('akun.index') }}" class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400">&larr; Kembali ke Beranda</a>
 
         @if (session('success'))
             <div class="mt-4 rounded-lg border border-success-500 bg-success-50 px-4 py-3 text-sm text-success-700">
@@ -37,7 +37,7 @@
         @endif
 
         <!-- Status pesanan -->
-        <div class="mt-6 rounded-2xl border border-gray-200 p-5 dark:border-gray-800">
+        <div class="mt-6 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
             @if ($pesanan->status == 'dibatalkan')
                 <p class="font-medium text-error-600">Pesanan ini dibatalkan. Silakan hubungi pelayan.</p>
             @else
@@ -57,7 +57,7 @@
         </div>
 
         <!-- Rincian -->
-        <div class="mt-6 rounded-2xl border border-gray-200 p-5 dark:border-gray-800">
+        <div class="mt-6 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
             <h2 class="mb-3 font-medium text-gray-800 dark:text-white/90">Rincian Pesanan</h2>
             <div class="space-y-2 text-sm">
                 @foreach ($pesanan->detail as $d)

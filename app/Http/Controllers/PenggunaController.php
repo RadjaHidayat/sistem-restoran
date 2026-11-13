@@ -15,6 +15,21 @@ class PenggunaController extends Controller
     public function index(Request $request)
     {
         $pengguna = User::with('role')
+            ->when($request->filled('cari'), function ($q) use ($request) {
+                $cari = '%' . $request->cari . '%';
+                $q->where(function ($q2) use ($cari) {
+                    $q2->where('nama', 'like', $cari)
+                        ->orWhere('email', 'like', $cari)
+                        ->orWhere('no_hp', 'like', $cari)
+                        ->orWhere('email_lama', 'like', $cari);
+                });
+            })
+            ->when($request->filled('role'), function ($q) use ($request) {
+                $q->where('id_role', $request->role);
+            })
+            ->when($request->filled('status'), function ($q) use ($request) {
+                $q->where('aktif', $request->status == 'aktif');
+            })
             ->orderBy('id_role')
             ->orderBy('nama')
             ->paginate($this->perHalaman($request))
@@ -23,6 +38,7 @@ class PenggunaController extends Controller
         return view('pages.pengguna.index', [
             'title' => 'Pengguna',
             'pengguna' => $pengguna,
+            'roles' => Role::orderBy('id_role')->get(),
         ]);
     }
 

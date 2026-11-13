@@ -15,9 +15,26 @@
     @endif
 
     <x-common.component-card title="Daftar Menu">
-        <div>
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                @include('pages._cari', ['placeholder' => 'Cari nama menu...'])
+
+                <form method="GET">
+                    @if (request('cari'))
+                        <input type="hidden" name="cari" value="{{ request('cari') }}">
+                    @endif
+                    <select name="kategori" onchange="this.form.submit()"
+                        class="h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 sm:w-48 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                        <option value="">Semua kategori</option>
+                        @foreach ($daftarKategori as $k)
+                            <option value="{{ $k->id_kategori }}" @selected(request('kategori') == $k->id_kategori)>{{ $k->nama_kategori }}</option>
+                        @endforeach
+                    </select>
+                </form>
+            </div>
+
             <a href="{{ route('menu.create') }}"
-                class="inline-flex h-11 items-center rounded-lg bg-brand-500 px-5 text-sm font-medium text-white hover:bg-brand-600">
+                class="inline-flex h-10 items-center justify-center rounded-lg bg-brand-500 px-5 text-sm font-medium text-white hover:bg-brand-600">
                 + Tambah Menu
             </a>
         </div>
@@ -84,7 +101,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="py-6 text-center text-gray-500">Belum ada menu.</td>
+                            <td colspan="7" class="py-6 text-center text-gray-500">{{ request('cari') || request('kategori') ? 'Tidak ada menu yang cocok.' : 'Belum ada menu.' }}</td>
                         </tr>
                     @endforelse
                 </tbody>

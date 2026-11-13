@@ -22,11 +22,18 @@ class PesanController extends Controller
             ->orderBy('nama_menu')
             ->get();
 
+        // Pesanan yang dikirim dari HP/browser ini untuk meja ini, hari ini
+        $pesananSaya = Pesanan::whereIn('kode_pesanan', session('pesanan_saya', []))
+            ->where('id_meja', $meja->id_meja)
+            ->whereDate('created_at', now()->toDateString())
+            ->orderByDesc('created_at')
+            ->get();
+
         return view('pages.pesan.menu', [
             'title' => 'Pesan Menu - Meja ' . $meja->nomor_meja,
             'meja' => $meja,
             'menuPerKategori' => $menu->groupBy(fn ($m) => $m->kategori->nama_kategori),
-            'hargaMenu' => $menu->mapWithKeys(fn ($m) => [$m->id_menu => (int) $m->harga]),
+            'pesananSaya' => $pesananSaya,
         ]);
     }
 
@@ -82,6 +89,9 @@ class PesanController extends Controller
 
             return $pesanan;
         });
+                // Ingat kode pesanan ini di sesi browser, supaya muncul di kotak "Pesananmu"
+        session()->push('pesanan_saya', $pesanan->kode_pesanan);
+
 
         return redirect()->route('pesan.status', [$meja->kode_qr, $pesanan->kode_pesanan]);
     }

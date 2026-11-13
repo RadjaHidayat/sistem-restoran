@@ -19,6 +19,7 @@
                     </a>
                 @endforeach
             </div>
+    @include('pages._cari', ['placeholder' => 'Cari nama pelanggan / meja...'])
             <a href="{{ route('reservasi.create') }}"
                 class="inline-flex h-11 items-center rounded-lg bg-brand-500 px-5 text-sm font-medium text-white hover:bg-brand-600">
                 + Tambah Reservasi

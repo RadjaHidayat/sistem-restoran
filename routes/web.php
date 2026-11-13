@@ -11,6 +11,9 @@ use App\Http\Controllers\ReservasiController;
 use App\Http\Controllers\PesanController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AkunController;
+use App\Http\Controllers\ProfilController;
+use App\Http\Controllers\NotifikasiController;
+use App\Http\Controllers\LupaPasswordController;
 use Illuminate\Support\Facades\Route;
 
 // ==================== Halaman tanpa login ====================
@@ -22,6 +25,14 @@ Route::post('/signup', [AuthController::class, 'register'])->name('signup.proses
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+
+// ==================== Lupa password (hanya untuk yang belum login) ====================
+Route::middleware('guest')->group(function () {
+    Route::get('/lupa-password', [LupaPasswordController::class, 'form'])->name('password.request');
+    Route::post('/lupa-password', [LupaPasswordController::class, 'kirimLink'])->middleware('throttle:5,1')->name('password.email');
+    Route::get('/reset-password/{token}', [LupaPasswordController::class, 'formReset'])->name('password.reset');
+    Route::post('/reset-password', [LupaPasswordController::class, 'simpanReset'])->name('password.update');
+});
 
 // ==================== Pemesanan pelanggan lewat QR (tanpa login) ====================
 Route::get('/pesan/{kodeQr}', [PesanController::class, 'menu'])->name('pesan.menu');
@@ -54,9 +65,9 @@ Route::middleware('auth')->group(function () {
         Route::get('pesanan/{pesanan}', [PesananController::class, 'show'])->name('pesanan.show');
         Route::patch('pesanan/{pesanan}/status', [PesananController::class, 'updateStatus'])->name('pesanan.status');
 
-        Route::get('/profile', function () {
-            return view('pages.profile', ['title' => 'Profile']);
-        })->name('profile');
+        Route::get('/profile', [ProfilController::class, 'index'])->name('profile');
+               
+        Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi');
     });
 
     // ---------- Khusus admin ----------
@@ -122,17 +133,22 @@ Route::middleware('auth')->group(function () {
     });
     
     // ==================== Area pelanggan (wajib login sebagai pelanggan) ====================
-    Route::middleware(['auth', 'role:pelanggan'])->group(function () {
-        Route::get('/akun', [AkunController::class, 'index'])->name('akun.index');
+Route::middleware(['auth', 'role:pelanggan'])->group(function () {
+    Route::get('/akun', [AkunController::class, 'index'])->name('akun.index');
+    Route::get('/akun/riwayat', [AkunController::class, 'riwayat'])->name('akun.riwayat');
 
-        Route::get('/akun/reservasi/buat', [AkunController::class, 'buatReservasi'])->name('akun.reservasi.buat');
-        Route::post('/akun/reservasi', [AkunController::class, 'simpanReservasi'])->name('akun.reservasi.simpan');
-        Route::patch('/akun/reservasi/{reservasi}/batal', [AkunController::class, 'batalReservasi'])->name('akun.reservasi.batal');
+    Route::get('/akun/reservasi/buat', [AkunController::class, 'buatReservasi'])->name('akun.reservasi.buat');
+    Route::post('/akun/reservasi', [AkunController::class, 'simpanReservasi'])->name('akun.reservasi.simpan');
+    Route::patch('/akun/reservasi/{reservasi}/batal', [AkunController::class, 'batalReservasi'])->name('akun.reservasi.batal');
 
-        
-        Route::get('/akun/pesan', [AkunController::class, 'pesanMenu'])->name('akun.pesan');
-        Route::post('/akun/pesan', [AkunController::class, 'simpanPesanan'])->middleware('throttle:10,1')->name('akun.pesan.simpan');
-        Route::get('/akun/pesanan/{pesanan}', [AkunController::class, 'detailPesanan'])->name('akun.pesanan');
-    });
+    Route::get('/akun/pesan', [AkunController::class, 'pesanMenu'])->name('akun.pesan');
+    Route::post('/akun/pesan', [AkunController::class, 'simpanPesanan'])->middleware('throttle:10,1')->name('akun.pesan.simpan');
+    Route::get('/akun/pesanan/{pesanan}', [AkunController::class, 'detailPesanan'])->name('akun.pesanan');
+    
+    Route::get('/akun/profil', [AkunController::class, 'profil'])->name('akun.profil');
+    Route::put('/akun/profil', [AkunController::class, 'simpanProfil'])->name('akun.profil.simpan');
+    Route::put('/akun/password', [AkunController::class, 'gantiPassword'])->name('akun.password');
+    Route::delete('/akun', [AkunController::class, 'nonaktifkan'])->name('akun.nonaktifkan');
+});
     
 });

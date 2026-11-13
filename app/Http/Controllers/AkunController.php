@@ -11,19 +11,85 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 // Halaman untuk pelanggan yang sudah login
 class AkunController extends Controller
 {
+    // ---------- Beranda pelanggan ----------
+
     public function index()
     {
         $idUser = Auth::id();
+        $hariIni = now()->toDateString();
+
+        // Hanya pesanan HARI INI yang dihitung di kartu ringkasan,
+        // jadi besok angkanya mulai dari 0 lagi (data lama tetap ada di Riwayat).
+        $pesananHariIni = Pesanan::where('id_user', $idUser)->whereDate('created_at', $hariIni)->get();
 
         return view('pages.akun.index', [
-            'title' => 'Akun Saya',
-            'pesanan' => Pesanan::with('meja')->where('id_user', $idUser)->orderByDesc('created_at')->limit(20)->get(),
-            'reservasi' => Reservasi::with('meja')->where('id_user', $idUser)->orderByDesc('tanggal')->orderByDesc('jam')->limit(20)->get(),
+            'title' => 'Beranda',
+            'jumlahHariIni' => $pesananHariIni->count(),
+            'belanjaHariIni' => $pesananHariIni->where('status', '!=', 'dibatalkan')->sum('total_harga'),
+            'jumlahSemua' => Pesanan::where('id_user', $idUser)->count(),
+            'pesananAktif' => Pesanan::with('meja')
+                ->where('id_user', $idUser)
+                ->whereIn('status', ['baru', 'dimasak', 'siap'])
+                ->orderByDesc('created_at')
+                ->get(),
+            'reservasiMendatang' => Reservasi::with('meja')
+                ->where('id_user', $idUser)
+                ->where('tanggal', '>=', $hariIni)
+                ->whereIn('status', ['menunggu', 'dikonfirmasi'])
+                ->orderBy('tanggal')
+                ->orderBy('jam')
+                ->get(),
+        ]);
+    }
+
+    // ---------- Riwayat pesanan (per hari) dan riwayat reservasi ----------
+
+    public function riwayat(Request $request)
+    {
+        $request->validate([
+            'tanggal' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+
+        $idUser = Auth::id();
+        $tab = $request->input('tab') == 'reservasi' ? 'reservasi' : 'pesanan';
+        $tanggal = $request->input('tanggal', now()->toDateString());
+
+        // Pesanan pada tanggal terpilih (bawaannya hari ini)
+        $pesanan = Pesanan::with(['meja', 'detail.menu'])
+            ->where('id_user', $idUser)
+            ->whereDate('created_at', $tanggal)
+            ->orderByDesc('created_at')
+            ->get();
+
+        // Daftar tanggal lain yang ada pesanannya, untuk lompat cepat
+        $hariLain = Pesanan::where('id_user', $idUser)
+            ->selectRaw('DATE(created_at) as tgl, COUNT(*) as jumlah')
+            ->groupBy('tgl')
+            ->orderByDesc('tgl')
+            ->limit(14)
+            ->get();
+
+        $reservasi = Reservasi::with('meja')
+            ->where('id_user', $idUser)
+            ->orderByDesc('tanggal')
+            ->orderByDesc('jam')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('pages.akun.riwayat', [
+            'title' => 'Riwayat',
+            'tab' => $tab,
+            'tanggal' => $tanggal,
+            'pesanan' => $pesanan,
+            'belanja' => $pesanan->where('status', '!=', 'dibatalkan')->sum('total_harga'),
+            'hariLain' => $hariLain,
+            'reservasi' => $reservasi,
         ]);
     }
 
@@ -171,5 +237,105 @@ class AkunController extends Controller
             'title' => 'Pesanan ' . $pesanan->kode_pesanan,
             'pesanan' => $pesanan,
         ]);
+    }
+
+    // ---------- Profil pelanggan (dipakai di langkah 18b) ----------
+
+    public function profil()
+    {
+        return view('pages.akun.profil', [
+            'title' => 'Profil Saya',
+            'user' => Auth::user(),
+            'jumlahPesanan' => Pesanan::where('id_user', Auth::id())->count(),
+        ]);
+    }
+
+    public function simpanProfil(Request $request)
+    {
+        $user = Auth::user();
+
+        $data = $request->validate([
+            'nama' => ['required', 'max:100'],
+            'email' => ['required', 'email', 'max:100', Rule::unique('users', 'email')->ignore($user->id_user, 'id_user')],
+            'no_hp' => ['required', 'max:20'],
+            'alamat' => ['nullable', 'max:500'],
+        ], [
+            'email.unique' => 'Email ini sudah dipakai akun lain.',
+        ]);
+
+        $user->update($data);
+
+        return back()->with('success', 'Profil berhasil disimpan.');
+    }
+
+    public function gantiPassword(Request $request)
+    {
+        $request->validate([
+            'password_lama' => ['required', 'current_password'],
+            'password' => ['required', 'min:6', 'confirmed', 'different:password_lama'],
+        ], [
+            'password_lama.current_password' => 'Password lama salah.',
+            'password.confirmed' => 'Konfirmasi password baru tidak sama.',
+            'password.different' => 'Password baru harus berbeda dari password lama.',
+        ]);
+
+        Auth::user()->update(['password' => $request->password]);
+
+        return back()->with('success', 'Password berhasil diganti. Pakai password baru saat login berikutnya.');
+    }
+
+    public function nonaktifkan(Request $request)
+    {
+        $request->validate([
+            'password_konfirmasi' => ['required', 'current_password'],
+            'setuju' => ['accepted'],
+        ], [
+            'password_konfirmasi.required' => 'Masukkan password untuk konfirmasi.',
+            'password_konfirmasi.current_password' => 'Password salah.',
+            'setuju.accepted' => 'Centang pernyataan di atas untuk melanjutkan.',
+        ]);
+
+        $user = Auth::user();
+
+        // Jangan nonaktifkan kalau masih ada pesanan yang sedang diproses
+        $masihDiproses = Pesanan::where('id_user', $user->id_user)
+            ->whereIn('status', ['baru', 'dimasak', 'siap'])
+            ->exists();
+
+        if ($masihDiproses) {
+            return back()->with('error', 'Masih ada pesanan yang sedang diproses. Tunggu sampai selesai, lalu coba lagi.');
+        }
+
+        DB::transaction(function () use ($user) {
+            // Batalkan reservasi yang masih berjalan, dan lepaskan mejanya
+            $reservasi = Reservasi::where('id_user', $user->id_user)
+                ->whereIn('status', ['menunggu', 'dikonfirmasi'])
+                ->get();
+
+            foreach ($reservasi as $r) {
+                $r->update(['status' => 'dibatalkan']);
+
+                if ($r->id_meja) {
+                    Meja::where('id_meja', $r->id_meja)->where('status', 'dipesan')->update(['status' => 'kosong']);
+                }
+            }
+
+            // Akun dinonaktifkan, BUKAN dihapus, supaya riwayat pesanan restoran tetap utuh.
+            // Email asli disimpan di email_lama, lalu kolom email diganti
+            // supaya alamat email itu bisa dipakai lagi untuk mendaftar akun baru.
+            $user->update([
+                'aktif' => false,
+                'dinonaktifkan_pada' => now(),
+                'email_lama' => $user->email,
+                'email' => 'nonaktif-' . $user->id_user . '@akun.nonaktif',
+                'password' => Str::random(40),
+            ]);
+        });
+
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('signin')->with('success', 'Akunmu sudah dinonaktifkan. Terima kasih sudah memesan di sini. Kalau ingin memesan lagi, silakan daftar akun baru.');
     }
 }

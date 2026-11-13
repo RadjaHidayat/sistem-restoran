@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Nov 10, 2026 at 02:13 PM
+-- Generation Time: Nov 13, 2026 at 05:26 PM
 -- Server version: 8.4.3
 -- PHP Version: 8.5.10
 
@@ -29,7 +29,6 @@ USE `restoran`;
 -- Table structure for table `detail_pesanan`
 --
 
-DROP TABLE IF EXISTS `detail_pesanan`;
 CREATE TABLE `detail_pesanan` (
   `id_detail` int NOT NULL,
   `id_pesanan` int NOT NULL,
@@ -63,7 +62,10 @@ INSERT INTO `detail_pesanan` (`id_detail`, `id_pesanan`, `id_menu`, `jumlah`, `h
 (16, 15, 4, 1, 24500.00, 24500.00, NULL),
 (17, 16, 5, 1, 10000.00, 10000.00, NULL),
 (18, 17, 4, 1, 24500.00, 24500.00, NULL),
-(19, 17, 5, 1, 10000.00, 10000.00, NULL);
+(19, 17, 5, 1, 10000.00, 10000.00, NULL),
+(20, 18, 4, 1, 24500.00, 24500.00, 'Jangan Pedas'),
+(21, 19, 4, 2, 24500.00, 49000.00, NULL),
+(22, 19, 5, 2, 10000.00, 20000.00, NULL);
 
 -- --------------------------------------------------------
 
@@ -71,7 +73,6 @@ INSERT INTO `detail_pesanan` (`id_detail`, `id_pesanan`, `id_menu`, `jumlah`, `h
 -- Table structure for table `kategori`
 --
 
-DROP TABLE IF EXISTS `kategori`;
 CREATE TABLE `kategori` (
   `id_kategori` int NOT NULL,
   `nama_kategori` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL
@@ -91,7 +92,6 @@ INSERT INTO `kategori` (`id_kategori`, `nama_kategori`) VALUES
 -- Table structure for table `meja`
 --
 
-DROP TABLE IF EXISTS `meja`;
 CREATE TABLE `meja` (
   `id_meja` int NOT NULL,
   `nomor_meja` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -114,7 +114,6 @@ INSERT INTO `meja` (`id_meja`, `nomor_meja`, `kapasitas`, `kode_qr`, `status`) V
 -- Table structure for table `menu`
 --
 
-DROP TABLE IF EXISTS `menu`;
 CREATE TABLE `menu` (
   `id_menu` int NOT NULL,
   `id_kategori` int NOT NULL,
@@ -136,10 +135,21 @@ INSERT INTO `menu` (`id_menu`, `id_kategori`, `nama_menu`, `deskripsi`, `harga`,
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `password_reset_tokens`
+--
+
+CREATE TABLE `password_reset_tokens` (
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `token` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `pembayaran`
 --
 
-DROP TABLE IF EXISTS `pembayaran`;
 CREATE TABLE `pembayaran` (
   `id_pembayaran` int NOT NULL,
   `id_pesanan` int NOT NULL,
@@ -170,7 +180,9 @@ INSERT INTO `pembayaran` (`id_pembayaran`, `id_pesanan`, `id_kasir`, `metode`, `
 (13, 2, 2, 'tunai', 25000.00, 'lunas', '2026-11-10 19:43:36'),
 (14, 15, 1, 'tunai', 50000.00, 'lunas', '2026-11-10 19:49:23'),
 (15, 16, 1, 'tunai', 10000.00, 'lunas', '2026-11-10 19:49:51'),
-(16, 17, 1, 'tunai', 35000.00, 'lunas', '2026-11-10 19:50:14');
+(16, 17, 1, 'tunai', 35000.00, 'lunas', '2026-11-10 19:50:14'),
+(17, 18, 1, 'tunai', 25000.00, 'lunas', '2026-11-13 18:04:11'),
+(18, 19, 1, 'tunai', 70000.00, 'lunas', '2026-11-13 22:00:10');
 
 -- --------------------------------------------------------
 
@@ -178,7 +190,6 @@ INSERT INTO `pembayaran` (`id_pembayaran`, `id_pesanan`, `id_kasir`, `metode`, `
 -- Table structure for table `pesanan`
 --
 
-DROP TABLE IF EXISTS `pesanan`;
 CREATE TABLE `pesanan` (
   `id_pesanan` int NOT NULL,
   `kode_pesanan` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -213,7 +224,9 @@ INSERT INTO `pesanan` (`id_pesanan`, `kode_pesanan`, `id_user`, `id_meja`, `id_p
 (14, 'ORD-261110-JTSAZ', 4, NULL, NULL, 'delivery', 'selesai', 34500.00, 'Bumi', '2026-11-10 12:38:40'),
 (15, 'ORD-261110-12ICM', 4, 4, NULL, 'dine_in', 'selesai', 24500.00, NULL, '2026-11-10 12:46:47'),
 (16, 'ORD-261110-JN6XI', 4, 4, NULL, 'dine_in', 'selesai', 10000.00, NULL, '2026-11-10 12:46:52'),
-(17, 'ORD-261110-8FHFM', 4, 4, NULL, 'dine_in', 'selesai', 34500.00, NULL, '2026-11-10 12:46:58');
+(17, 'ORD-261110-8FHFM', 4, 4, NULL, 'dine_in', 'selesai', 34500.00, NULL, '2026-11-10 12:46:58'),
+(18, 'ORD-261113-SCTPR', 4, NULL, 1, 'takeaway', 'selesai', 24500.00, NULL, '2026-11-13 11:04:03'),
+(19, 'ORD-261113-WNFHR', NULL, 3, NULL, 'dine_in', 'selesai', 69000.00, NULL, '2026-11-13 14:53:51');
 
 -- --------------------------------------------------------
 
@@ -221,7 +234,6 @@ INSERT INTO `pesanan` (`id_pesanan`, `kode_pesanan`, `id_user`, `id_meja`, `id_p
 -- Table structure for table `reservasi`
 --
 
-DROP TABLE IF EXISTS `reservasi`;
 CREATE TABLE `reservasi` (
   `id_reservasi` int NOT NULL,
   `id_user` int NOT NULL,
@@ -247,7 +259,6 @@ INSERT INTO `reservasi` (`id_reservasi`, `id_user`, `id_meja`, `tanggal`, `jam`,
 -- Table structure for table `roles`
 --
 
-DROP TABLE IF EXISTS `roles`;
 CREATE TABLE `roles` (
   `id_role` int NOT NULL,
   `nama_role` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL
@@ -269,7 +280,6 @@ INSERT INTO `roles` (`id_role`, `nama_role`) VALUES
 -- Table structure for table `users`
 --
 
-DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id_user` int NOT NULL,
   `id_role` int NOT NULL,
@@ -278,6 +288,9 @@ CREATE TABLE `users` (
   `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `no_hp` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `alamat` text COLLATE utf8mb4_unicode_ci,
+  `aktif` tinyint(1) NOT NULL DEFAULT '1',
+  `dinonaktifkan_pada` datetime DEFAULT NULL,
+  `email_lama` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -285,12 +298,12 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id_user`, `id_role`, `nama`, `email`, `password`, `no_hp`, `alamat`, `created_at`) VALUES
-(1, 1, 'Admin', 'admin@restoran.test', '$2y$12$7p.MhX6nEbWRzfG43GX8.Ov0odBxuXqvpBxqlI1HAu6hQ6CuM4NTe', NULL, NULL, '2026-11-09 09:16:20'),
-(2, 2, 'Budi', 'kasir@restoran.test', '$2y$12$FtXtSwWycxuoLBj4baHzEulXIHHKoW/4VkqaFcVSJyBDrmn2sMk7S', NULL, NULL, '2026-11-09 11:46:26'),
-(4, 4, 'Joko', 'joko@restoran.test', '$2y$12$u5nUJrw43qgiIzpyRprsf.C0duiqUig41TAEWhoGLnNGbtlg7RiSG', NULL, NULL, '2026-11-10 01:02:14'),
-(5, 3, 'Mirai', 'koki@restoran.test', '$2y$12$HxEhZtMEVSdYX76tznekYeqX.s4cWOcHLquIoOtqxBcL.0634mo5y', NULL, NULL, '2026-11-10 01:38:11'),
-(6, 4, 'kaka', 'kaka@restoran.test', '$2y$12$LOH5j.9lawg2YIE07jjvVemZqxdAw3EK7Bua3zvE1l1t0fVHG1Kcq', '0812345678', NULL, '2026-11-10 02:37:21');
+INSERT INTO `users` (`id_user`, `id_role`, `nama`, `email`, `password`, `no_hp`, `alamat`, `aktif`, `dinonaktifkan_pada`, `email_lama`, `created_at`) VALUES
+(1, 1, 'Admin', 'admin@restoran.test', '$2y$12$7p.MhX6nEbWRzfG43GX8.Ov0odBxuXqvpBxqlI1HAu6hQ6CuM4NTe', NULL, NULL, 1, NULL, NULL, '2026-11-09 09:16:20'),
+(2, 2, 'Budi', 'kasir@restoran.test', '$2y$12$FtXtSwWycxuoLBj4baHzEulXIHHKoW/4VkqaFcVSJyBDrmn2sMk7S', NULL, NULL, 1, NULL, NULL, '2026-11-09 11:46:26'),
+(4, 4, 'Jaka', 'jaka@restoran.test', '$2y$12$93n5gtXNjBsyYCAc.3b6Yu8hC6ZjWNuOP4gMEsyzgJN3AjwVgE3Fe', '0812333456', 'Bumikarta', 1, NULL, NULL, '2026-11-10 01:02:14'),
+(5, 3, 'Mirai', 'koki@restoran.test', '$2y$12$HxEhZtMEVSdYX76tznekYeqX.s4cWOcHLquIoOtqxBcL.0634mo5y', NULL, NULL, 1, NULL, NULL, '2026-11-10 01:38:11'),
+(6, 4, 'kaka', 'kaka@restoran.test', '$2y$12$9eqZJqQ/jLoEZ7VEwzzxDO1v5Qj/TknHFGHPsRSX/PWdZI.IDBXua', '0812345678', NULL, 1, NULL, NULL, '2026-11-10 02:37:21');
 
 --
 -- Indexes for dumped tables
@@ -325,6 +338,12 @@ ALTER TABLE `meja`
 ALTER TABLE `menu`
   ADD PRIMARY KEY (`id_menu`),
   ADD KEY `fk_menu_kategori` (`id_kategori`);
+
+--
+-- Indexes for table `password_reset_tokens`
+--
+ALTER TABLE `password_reset_tokens`
+  ADD PRIMARY KEY (`email`);
 
 --
 -- Indexes for table `pembayaran`
@@ -375,7 +394,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `detail_pesanan`
 --
 ALTER TABLE `detail_pesanan`
-  MODIFY `id_detail` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id_detail` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `kategori`
@@ -399,13 +418,13 @@ ALTER TABLE `menu`
 -- AUTO_INCREMENT for table `pembayaran`
 --
 ALTER TABLE `pembayaran`
-  MODIFY `id_pembayaran` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id_pembayaran` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `pesanan`
 --
 ALTER TABLE `pesanan`
-  MODIFY `id_pesanan` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id_pesanan` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `reservasi`

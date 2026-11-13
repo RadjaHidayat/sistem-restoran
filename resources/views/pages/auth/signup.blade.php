@@ -95,12 +95,13 @@
                 <div class="z-1 flex items-center justify-center">
                     <!-- ===== Common Grid Shape Start ===== -->
                     <x-common.common-grid-shape />
-                    <div class="flex max-w-xs flex-col items-center">
-                        <a href="/" class="mb-4 block">
-                            <img src="./assets/images/logo/auth-logo.svg" alt="Logo" />
-                        </a>
-                        <p class="text-center text-gray-400 dark:text-white/60">
-                            Free and Open-Source Tailwind CSS Admin Dashboard Template
+                    <div class="flex max-w-xs flex-col items-center text-center">
+                        <span class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-500 text-3xl font-bold text-white">
+                            {{ mb_substr(config('app.name'), 0, 1) }}
+                        </span>
+                        <p class="text-2xl font-semibold text-white">{{ config('app.name') }}</p>
+                        <p class="mt-2 text-gray-400 dark:text-white/60">
+                            Daftar sekali, lalu pesan antar, ambil sendiri, atau reservasi meja kapan saja.
                         </p>
                     </div>
                 </div>

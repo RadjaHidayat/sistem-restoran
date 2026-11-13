@@ -15,16 +15,70 @@ class PesananController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pesanan::with(['meja', 'user'])->orderByDesc('created_at');
+        $request->validate([
+            'tanggal' => ['nullable', 'date_format:Y-m-d'],
+            'status' => ['nullable', 'in:semua,baru,dimasak,siap,selesai,dibatalkan'],
+        ]);
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        $tanggal = $request->input('tanggal', now()->toDateString());
+        $status = $request->input('status', 'semua');
+        $cari = trim((string) $request->input('cari', ''));
+
+        // ---------- Pesanan yang "terlihat": tanggal terpilih, atau semua tanggal kalau sedang mencari ----------
+        $dasar = Pesanan::query();
+
+        if ($cari !== '') {
+            $dasar->where(function ($q) use ($cari) {
+                $q->where('kode_pesanan', 'like', "%{$cari}%")
+                    ->orWhereHas('user', fn ($u) => $u->where('nama', 'like', "%{$cari}%"))
+                    ->orWhereHas('meja', fn ($m) => $m->where('nomor_meja', 'like', "%{$cari}%"))
+                    ->orWhereHas('detail.menu', fn ($m) => $m->where('nama_menu', 'like', "%{$cari}%"));
+            });
+        } else {
+            $dasar->whereDate('created_at', $tanggal);
         }
+
+        // ---------- Jumlah pesanan per status, untuk angka di tiap tab ----------
+        $perStatus = (clone $dasar)
+            ->selectRaw('status, COUNT(*) as jumlah')
+            ->groupBy('status')
+            ->pluck('jumlah', 'status');
+
+        $jumlah = ['semua' => (int) $perStatus->sum()];
+        foreach (['baru', 'dimasak', 'siap', 'selesai', 'dibatalkan'] as $s) {
+            $jumlah[$s] = (int) ($perStatus[$s] ?? 0);
+        }
+
+        // ---------- Isi tabel ----------
+        $query = (clone $dasar)->with(['meja', 'user']);
+
+        if ($status != 'semua') {
+            $query->where('status', $status);
+        }
+
+        // Pesanan yang masih dikerjakan: yang paling lama menunggu di atas.
+        // Selain itu: yang terbaru di atas.
+        if (in_array($status, ['baru', 'dimasak', 'siap'])) {
+            $query->orderBy('created_at');
+        } else {
+            $query->orderByDesc('created_at');
+        }
+
+        // ---------- Pengingat: pesanan hari sebelumnya yang belum selesai ----------
+        $tertunda = Pesanan::whereIn('status', ['baru', 'dimasak', 'siap'])
+            ->whereDate('created_at', '<', now()->toDateString())
+            ->orderBy('created_at')
+            ->get(['id_pesanan', 'created_at']);
 
         return view('pages.pesanan.index', [
             'title' => 'Pesanan',
             'pesanan' => $query->paginate($this->perHalaman($request))->withQueryString(),
-            'statusDipilih' => $request->status,
+            'statusDipilih' => $status,
+            'tanggal' => $tanggal,
+            'cari' => $cari,
+            'jumlah' => $jumlah,
+            'jumlahTertunda' => $tertunda->count(),
+            'tanggalTertunda' => $tertunda->first()?->created_at->toDateString(),
         ]);
     }
 
@@ -34,7 +88,7 @@ class PesananController extends Controller
             'title' => 'Buat Pesanan',
             'menu' => Menu::with('kategori')->where('tersedia', true)->orderBy('id_kategori')->orderBy('nama_menu')->get(),
             'meja' => Meja::where('status', '!=', 'terisi')->orderBy('nomor_meja')->get(),
-            'pelanggan' => User::whereHas('role', fn ($q) => $q->where('nama_role', 'pelanggan'))->orderBy('nama')->get(),
+            'pelanggan' => User::whereHas('role', fn ($q) => $q->where('nama_role', 'pelanggan'))->where('aktif', true)->orderBy('nama')->get(),
         ]);
     }
 

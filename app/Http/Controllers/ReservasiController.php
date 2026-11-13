@@ -17,6 +17,15 @@ class ReservasiController extends Controller
 
         $query = Reservasi::with(['user', 'meja']);
 
+        // Pencarian nama pelanggan atau nomor meja
+        if ($request->filled('cari')) {
+            $cari = '%' . $request->cari . '%';
+            $query->where(function ($q) use ($cari) {
+                $q->whereHas('user', fn ($u) => $u->where('nama', 'like', $cari))
+                    ->orWhereHas('meja', fn ($m) => $m->where('nomor_meja', 'like', $cari));
+            });
+        }
+
         if ($tab == 'mendatang') {
             // Reservasi yang masih akan datang dan belum selesai/batal, yang paling dekat di atas
             $query->where('tanggal', '>=', $hariIni)

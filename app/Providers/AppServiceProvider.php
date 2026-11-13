@@ -5,6 +5,8 @@ namespace App\Providers;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -43,5 +45,22 @@ class AppServiceProvider extends ServiceProvider
         Blade::anonymousComponentPath(resource_path('views/components/main/pages/file-manager'), 'file-manager');
         Blade::anonymousComponentPath(resource_path('views/components/main/pages/pricing-tables'), 'pricing');
         Blade::anonymousComponentPath(resource_path('views/components/main/pages/integrations'), 'integration');
+
+                // Isi email reset password dalam bahasa Indonesia
+        ResetPassword::toMailUsing(function ($user, string $token) {
+            $url = route('password.reset', [
+                'token' => $token,
+                'email' => $user->getEmailForPasswordReset(),
+            ]);
+
+            return (new MailMessage)
+                ->subject('Buat password baru - ' . config('app.name'))
+                ->greeting('Halo, ' . $user->nama . '!')
+                ->line('Kami menerima permintaan untuk membuat password baru untuk akunmu.')
+                ->action('Buat Password Baru', $url)
+                ->line('Link ini berlaku selama 60 menit dan hanya bisa dipakai satu kali.')
+                ->line('Kalau kamu tidak merasa meminta ini, abaikan saja email ini. Password lamamu tetap aman.')
+                ->salutation('Salam hangat, ' . config('app.name'));
+        });
     }
 }

@@ -2,107 +2,64 @@
 
 @section('content')
     @php
-        // Jumlah awal tiap menu (0, atau isian sebelumnya kalau ada error)
-        $jumlahAwal = $hargaMenu->map(fn ($harga, $id) => (int) old('jumlah.' . $id, 0));
+        $labelStatus = ['baru' => 'Diterima', 'dimasak' => 'Sedang dimasak', 'siap' => 'Siap disajikan', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan'];
     @endphp
 
-    <div class="mx-auto min-h-screen max-w-2xl bg-white pb-32 dark:bg-gray-900">
-        <div class="border-b border-gray-200 px-5 py-6 dark:border-gray-800">
-            <p class="text-sm text-gray-500 dark:text-gray-400">Selamat datang! Kamu memesan untuk</p>
-            <h1 class="text-2xl font-semibold text-gray-800 dark:text-white/90">Meja {{ $meja->nomor_meja }}</h1>
-        </div>
+    <div class="min-h-screen bg-gray-50 dark:bg-gray-950">
+        <div class="mx-auto max-w-2xl px-4 pb-32">
+            <!-- Kepala halaman -->
+            <header class="relative -mx-4 overflow-hidden bg-brand-500 px-5 pt-8 pb-16 text-white sm:mx-0 sm:mt-4 sm:rounded-3xl">
+                <div class="absolute -top-12 -right-12 h-44 w-44 rounded-full bg-white/10"></div>
+                <div class="absolute right-20 -bottom-16 h-32 w-32 rounded-full bg-white/10"></div>
+                <div class="relative">
+                    <p class="text-sm font-medium text-white/80">{{ config('app.name') }}</p>
+                    <h1 class="mt-1 text-2xl font-semibold">Selamat datang! 👋</h1>
+                    <p class="mt-1 text-sm text-white/80">Pilih menu, pesan, dan makanan diantar ke mejamu.</p>
+                </div>
+            </header>
 
-        @if (session('error'))
-            <div class="mx-5 mt-5 rounded-lg border border-error-500 bg-error-50 px-4 py-3 text-sm text-error-700">
-                {{ session('error') }}
+            <!-- Kartu meja (menumpuk ke atas header) -->
+            <div class="relative -mt-10 flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-md dark:border-gray-800 dark:bg-gray-900">
+                <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-lg font-bold text-brand-600 dark:bg-brand-500/15 dark:text-brand-400">
+                    {{ $meja->nomor_meja }}
+                </span>
+                <div class="flex-1">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Kamu memesan untuk</p>
+                    <p class="font-semibold text-gray-800 dark:text-white/90">Meja {{ $meja->nomor_meja }} · {{ $meja->kapasitas }} kursi</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Bayar di kasir setelah selesai makan</p>
+                </div>
             </div>
-        @endif
 
-        <form method="POST" action="{{ route('pesan.store', $meja->kode_qr) }}"
-            x-data="{
-                qty: @js($jumlahAwal),
-                harga: @js($hargaMenu),
-                get total() {
-                    return Object.keys(this.qty).reduce((t, id) => t + this.harga[id] * (this.qty[id] || 0), 0);
-                },
-                get jumlahItem() {
-                    return Object.values(this.qty).reduce((t, q) => t + (q || 0), 0);
-                },
-                rupiah(n) {
-                    return 'Rp ' + n.toLocaleString('id-ID');
-                }
-            }">
-            @csrf
-
-            @forelse ($menuPerKategori as $namaKategori => $daftarMenu)
-                <div class="px-5 pt-6">
-                    <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ $namaKategori }}</h2>
-
-                    <div class="space-y-3">
-                        @foreach ($daftarMenu as $item)
-                            <div class="flex gap-4 rounded-2xl border border-gray-200 p-3 dark:border-gray-800">
-                                @if ($item->foto)
-                                    <img src="{{ asset('storage/' . $item->foto) }}" alt="{{ $item->nama_menu }}"
-                                        class="h-20 w-20 shrink-0 rounded-xl object-cover">
-                                @else
-                                    <div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-xs text-gray-400 dark:bg-gray-800">
-                                        Tanpa foto
-                                    </div>
-                                @endif
-
-                                <div class="flex flex-1 flex-col">
-                                    <p class="font-medium text-gray-800 dark:text-white/90">{{ $item->nama_menu }}</p>
-                                    @if ($item->deskripsi)
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ $item->deskripsi }}</p>
-                                    @endif
-
-                                    <div class="mt-auto flex items-center justify-between pt-2">
-                                        <span class="text-sm font-semibold text-gray-800 dark:text-white/90">
-                                            Rp {{ number_format($item->harga, 0, ',', '.') }}
-                                        </span>
-
-                                        <div class="flex items-center gap-2">
-                                            <button type="button"
-                                                @click="qty[{{ $item->id_menu }}] = Math.max(0, (qty[{{ $item->id_menu }}] || 0) - 1)"
-                                                class="flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 text-gray-700 dark:border-gray-700 dark:text-gray-300">
-                                                &minus;
-                                            </button>
-                                            <input type="number" min="0" max="50" name="jumlah[{{ $item->id_menu }}]"
-                                                x-model.number="qty[{{ $item->id_menu }}]"
-                                                class="h-8 w-12 rounded-lg border border-gray-300 bg-transparent text-center text-sm text-gray-800 dark:border-gray-700 dark:text-white/90">
-                                            <button type="button"
-                                                @click="qty[{{ $item->id_menu }}] = (qty[{{ $item->id_menu }}] || 0) + 1"
-                                                class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-500 text-white">
-                                                +
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <input type="text" name="catatan[{{ $item->id_menu }}]" x-show="qty[{{ $item->id_menu }}] > 0"
-                                        value="{{ old('catatan.' . $item->id_menu) }}" placeholder="Catatan, contoh: tidak pedas"
-                                        class="mt-2 h-9 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 dark:border-gray-700 dark:text-white/90">
-                                </div>
-                            </div>
+            <!-- Pesanan yang sudah dikirim dari HP ini (hari ini) -->
+            @if ($pesananSaya->isNotEmpty())
+                <div class="mt-4 rounded-2xl border border-brand-200 bg-brand-50 p-4 dark:border-brand-500/30 dark:bg-brand-500/10">
+                    <p class="text-sm font-semibold text-gray-800 dark:text-white/90">Pesananmu</p>
+                    <div class="mt-2 space-y-2">
+                        @foreach ($pesananSaya as $p)
+                            <a href="{{ route('pesan.status', [$meja->kode_qr, $p->kode_pesanan]) }}"
+                                class="flex items-center justify-between rounded-xl bg-white px-3 py-2.5 text-sm hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-white/5">
+                                <span>
+                                    <span class="font-mono text-xs text-gray-500">{{ $p->kode_pesanan }}</span>
+                                    <span class="block font-medium text-gray-800 dark:text-white/90">{{ $labelStatus[$p->status] }}</span>
+                                </span>
+                                <span class="text-xs font-medium text-brand-600 dark:text-brand-400">Lihat status &rarr;</span>
+                            </a>
                         @endforeach
                     </div>
                 </div>
-            @empty
-                <p class="px-5 py-10 text-center text-gray-500">Maaf, belum ada menu yang tersedia.</p>
-            @endforelse
+            @endif
 
-            <!-- Bar total di bagian bawah layar -->
-            <div class="fixed inset-x-0 bottom-0 border-t border-gray-200 bg-white px-5 py-4 dark:border-gray-800 dark:bg-gray-900">
-                <div class="mx-auto flex max-w-2xl items-center justify-between gap-4">
-                    <div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400"><span x-text="jumlahItem"></span> item</p>
-                        <p class="text-lg font-semibold text-gray-800 dark:text-white/90" x-text="rupiah(total)"></p>
-                    </div>
-                    <button type="submit" :disabled="total === 0"
-                        class="h-11 rounded-lg bg-brand-500 px-6 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50">
-                        Pesan Sekarang
-                    </button>
+            @if (session('error'))
+                <div class="mt-4 rounded-xl border border-error-500 bg-error-50 px-4 py-3 text-sm text-error-700">
+                    {{ session('error') }}
                 </div>
+            @endif
+
+            <div class="mt-2">
+                <x-katalog-menu :menu-per-kategori="$menuPerKategori" :action="route('pesan.store', $meja->kode_qr)"
+                    judul-tombol="Kirim Pesanan ke Dapur"
+                    keterangan-bayar="Pesanan langsung diteruskan ke dapur. Pembayaran di kasir setelah selesai makan." />
             </div>
-        </form>
+        </div>
     </div>
 @endsection

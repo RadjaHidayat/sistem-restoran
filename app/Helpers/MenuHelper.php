@@ -117,9 +117,9 @@ class MenuHelper
         }
 
         // Grup contoh TailAdmin, hanya admin
-        if ($user && $user->punyaRole('admin')) {
-            $groups[] = ['title' => 'Template (contoh UI)', 'items' => self::getMainNavItems()];
-        }
+        // if ($user && $user->punyaRole('admin')) {
+        //     $groups[] = ['title' => 'Template (contoh UI)', 'items' => self::getMainNavItems()];
+        // }
 
         return $groups;
     }

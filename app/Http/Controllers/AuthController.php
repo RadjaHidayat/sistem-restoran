@@ -21,7 +21,7 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt($credentials)) {
+        if (Auth::attempt($credentials + ['aktif' => 1])) {
             $request->session()->regenerate();
 
             // Pelanggan diarahkan ke area pelanggan, staf ke dashboard

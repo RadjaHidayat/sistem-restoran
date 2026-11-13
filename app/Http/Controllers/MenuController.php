@@ -13,6 +13,12 @@ class MenuController extends Controller
     public function index(Request $request)
     {
         $menu = Menu::with('kategori')
+            ->when($request->filled('cari'), function ($q) use ($request) {
+                $q->where('nama_menu', 'like', '%' . $request->cari . '%');
+            })
+            ->when($request->filled('kategori'), function ($q) use ($request) {
+                $q->where('id_kategori', $request->kategori);
+            })
             ->orderBy('nama_menu')
             ->paginate($this->perHalaman($request))
             ->withQueryString();
@@ -20,6 +26,7 @@ class MenuController extends Controller
         return view('pages.menu.index', [
             'title' => 'Menu Makanan',
             'menu' => $menu,
+            'daftarKategori' => Kategori::orderBy('nama_kategori')->get(),
         ]);
     }
 
