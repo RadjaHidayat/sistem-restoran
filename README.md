@@ -181,9 +181,8 @@ database/sql/           → file database untuk di-import
 
 | Nama | NIM | Peran |
 |---|---|---|
-| [Nama 1] | [NIM] | [contoh: Backend, database] |
-| [Nama 2] | [NIM] | [contoh: Tampilan admin] |
-| [Nama 3] | [NIM] | [contoh: Tampilan pelanggan, laporan] |
+| [Sattari Radjasyah Hidayat] | [123250190] | [Backend, database, Desain Tampilan] |
+| [Indra Okta Nugraha] | [123250188] | [Desain Tampilan, Laporan Proyek] |
 
 ---
 
