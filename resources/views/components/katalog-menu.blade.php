@@ -156,6 +156,8 @@
     @endif
 
     <!-- Bar keranjang di bawah layar -->
+    <!-- Ruang kosong supaya menu paling bawah tidak tertutup bar keranjang -->
+    <div class="h-32" aria-hidden="true"></div>
     <div class="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] dark:border-gray-800 dark:bg-gray-900">
         <div class="mx-auto {{ $lebar }}">
             <button type="button" @click="keranjang = true" :disabled="jumlahItem === 0"
